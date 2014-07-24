@@ -5,8 +5,9 @@ Based on [Building and installing HHVM on OSX 10.8](https://github.com/facebook/
 
 Supported OSX
 ------------
-* Mavericks
-* Mountain Lion
+* 10.10 Yosemite [gcc49](https://github.com/Homebrew/homebrew-versions/pull/470)
+* 10.9 Mavericks
+* 10.8 Mountain Lion
 
 Requirements
 ------------
@@ -33,7 +34,7 @@ brew tap mcuadros/homebrew-hhvm
 Usage
 -----
 
-Install the last stable version (3.0.1)
+Install the last stable version (3.2.0)
 
 ```sh
 brew install hhvm
