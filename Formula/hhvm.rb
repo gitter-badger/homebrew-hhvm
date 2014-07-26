@@ -14,15 +14,16 @@ class Hhvm < Formula
   end
 
   stable do
-    url 'https://github.com/facebook/hhvm/archive/HHVM-3.2.0.tar.gz'
-    sha1 '039f97ae85244bdc5a06f0822f1f993f53badca5'
+    url 'https://github.com/facebook/hhvm/archive/HHVM-3.3.0.tar.gz'
+    sha1 'ba911fbc9d06e418ec18e68f3736d69f79075ee5'
+    version '3.3.0'
     resource 'third-party' do
-      url 'https://github.com/hhvm/hhvm-third-party/archive/b9463da0d286a6f070803bdaa01df47309d508b7.tar.gz'
-      sha1 '4105be9132230b7cfabc613ca9eff9c27ff259e7'
+      url 'https://github.com/hhvm/hhvm-third-party/archive/fdef620998ce599280904416263968b59ef21794.tar.gz'
+      sha1 '10066e1faca7f3ceba8a5ad9c2d18b0670dc4fc8'
     end
     resource 'folly' do
-      url 'https://github.com/facebook/folly/archive/09a81a96ea2f9790242675f3c84013266c38d684.tar.gz'
-      sha1 'a62ff00b97813a05981ae687eea07d2ce509871d'
+      url 'https://github.com/facebook/folly/archive/6e46d468cf2876dd59c7a4dddcb4e37abf070b7a.tar.gz'
+      sha1 'ca1d03214085a02783d06c5ab6886e5a13e451f0'
     end
   end
 
@@ -91,12 +92,7 @@ class Hhvm < Formula
     depends_on 'mysql-connector-c++'
   end
 
-  patch :DATA unless build.head?
-
   def install
-    if !build.with? 'gcc48' and !build.with? 'gcc49'
-      raise "Currently only works with the --with-gcc48 or --with-gcc49"
-    end
     args = [
       ".",
       "-DBOOST_INCLUDEDIR=#{Formula['boost'].opt_prefix}/include",
@@ -231,73 +227,31 @@ class Hhvm < Formula
     EOS
   end
 
-  def caveats
+  def caveats_gcc;
+    if build.with? 'gcc49'
+      cc_ver = 'gcc-4.9'
+    elsif build.with? 'gcc48'
+      cc_ver = 'gcc-4.8'
+    end
     <<-EOS.undent
+
+      If you are getting errors like 'Undefined symbols for architecture x86_64:' execute:
+        $ brew reinstall --build-from-source --cc=#{cc_ver} boost gflags glog
+    EOS
+  end
+
+  def caveats
+    s = <<-EOS.undent
       If you have XQuartz (X11) installed,
       to temporarily remove a symbolic link at '/usr/X11R6'
       in order to successfully install HHVM.
         $ sudo rm /usr/X11R6
         $ sudo ln -s /opt/X11 /usr/X11R6
 
-      If you are getting errors like 'Undefined symbols for architecture x86_64:',
-      related to google or boost, execute:
-        $ brew reinstall --build-from-source --cc=#{ENV.cc} boost gflags glog
-
       The php.ini file can be found in:
         #{etc}/hhvm/php.ini
     EOS
+    s << caveats_gcc if build.with? 'gcc48' or build.with? 'gcc49'
+    s
   end
 end
-
-__END__
-diff --git a/hphp/runtime/ext/gd/libgd/gdft.cpp b/hphp/runtime/ext/gd/libgd/gdft.cpp
-index 15b83c2..c6e3a38 100644
---- a/hphp/runtime/ext/gd/libgd/gdft.cpp
-+++ b/hphp/runtime/ext/gd/libgd/gdft.cpp
-@@ -62,7 +62,7 @@ gdImageStringFT (gdImage * im, int *brect, int fg, char *fontlist,
- 
- #include "gdcache.h"
- 
--#include <freetype/config/ftheader.h>
-+#include <ft2build.h>
- 
- #include FT_FREETYPE_H
- #include FT_GLYPH_H
-diff --git a/hphp/runtime/base/emulate-zend.cpp b/hphp/runtime/base/emulate-zend.cpp
-index c039301..a95188b 100644
---- a/hphp/runtime/base/emulate-zend.cpp
-+++ b/hphp/runtime/base/emulate-zend.cpp
-@@ -235,12 +235,12 @@ int emulate_zend(int argc, char** argv) {
- 
-     // If the -c option is specified without a -n, php behavior is to
-     // load the default ini/hdf
--    auto default_config_file = "/etc/hhvm/php.ini";
-+    auto default_config_file = "/usr/local/etc/hhvm/php.ini";
-     if (access(default_config_file, R_OK) != -1) {
-       newargv.push_back("-c");
-       newargv.push_back(default_config_file);
-     }
--    default_config_file = "/etc/hhvm/config.hdf";
-+    default_config_file = "/usr/local/etc/hhvm/config.hdf";
-     if (access(default_config_file, R_OK) != -1) {
-       newargv.push_back("-c");
-       newargv.push_back(default_config_file);
-diff --git a/hphp/runtime/base/program-functions.cpp b/hphp/runtime/base/program-functions.cpp
-index 4fe480c..f75040a 100644
---- a/hphp/runtime/base/program-functions.cpp
-+++ b/hphp/runtime/base/program-functions.cpp
-@@ -1150,12 +1150,12 @@ static int execute_program_impl(int argc, char** argv) {
-       return -1;
-     }
-     if (po.config.empty() && !vm.count("no-config")) {
--      auto default_config_file = "/etc/hhvm/php.ini";
-+      auto default_config_file = "/usr/local/etc/hhvm/php.ini";
-       if (access(default_config_file, R_OK) != -1) {
-         Logger::Verbose("Using default config file: %s", default_config_file);
-         po.config.push_back(default_config_file);
-       }
--      default_config_file = "/etc/hhvm/config.hdf";
-+      default_config_file = "/usr/local/etc/hhvm/config.hdf";
-       if (access(default_config_file, R_OK) != -1) {
-         Logger::Verbose("Using default config file: %s", default_config_file);
-         po.config.push_back(default_config_file);
