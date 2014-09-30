@@ -27,10 +27,23 @@ class Hhvm < Formula
     end
   end
 
+  devel do
+    url 'https://github.com/facebook/hhvm/archive/3543a709f64b6ae1848e63628ec058c4af113254.tar.gz'
+    sha1 ''
+    version '3.3.1a'
+    resource 'third-party' do
+      url 'https://github.com/hhvm/hhvm-third-party/archive/12acbba4c05d8cbe97fe2a94a4a833c0c80e8182.tar.gz'
+      sha1 ''
+    end
+    resource 'folly' do
+      url 'https://github.com/facebook/folly/tree/4ecd8cdd6396f2f4cbfc17c1063537884e3cd6b9.tar.gz'
+      sha1 ''
+    end
+  end
+
   option 'with-cotire', 'Speed up the build by precompiling headers.'
   option 'with-debug', 'Enable debug build (default Release).'
-  option 'with-gcc48', 'Build with gcc-4.8 compiler.'
-  option 'with-gcc49', 'Build with gcc-4.9 compiler.'
+  option 'with-gcc', 'Build with gcc-4.9 compiler.'
   option 'with-mariadb', 'Use mariadb as mysql package.'
   option 'with-minsizerel', 'Enable minimal size release build.'
   option 'with-percona-server', 'Use percona-server as mysql package.'
@@ -42,15 +55,11 @@ class Hhvm < Formula
   depends_on 'autoconf' => :build
   depends_on 'automake' => :build
   depends_on 'pkg-config' => :build
-  if build.with? 'gcc49'
-    depends_on 'gcc49' => :build
-  elsif build.with? 'gcc48'
-    depends_on 'gcc48' => :build
-  end
+  depends_on 'gcc' => :optional
 
   # Standard packages
   depends_on 'boost'
-  if build.with? 'gcc48' or build.with? 'gcc49'
+  if build.with? 'gcc'
     depends_on 'binutils'
   else
     depends_on 'binutilsfb'
@@ -138,22 +147,20 @@ class Hhvm < Formula
       "-DTEST_TBB_INCLUDE_DIR=#{Formula['tbb'].opt_prefix}/include",
     ]
 
-    if build.with? 'gcc49'
-      args << "-DCMAKE_CXX_COMPILER=#{Formula['gcc49'].opt_prefix}/bin/g++-4.9"
-      args << "-DCMAKE_C_COMPILER=#{Formula['gcc49'].opt_prefix}/bin/gcc-4.9"
-      args << "-DCMAKE_ASM_COMPILER=#{Formula['gcc49'].opt_prefix}/bin/gcc-4.9"
+    if build.with? 'gcc'
+      # Support GCC/LLVM stack-smashing protection: http://git.io/5Kzu3A
+      # Preprocessor gcc performance regressions: http://git.io/4r7VCQ
+      if build.devel?
+        args << "-DCMAKE_C_FLAGS=-ftrack-macro-expansion=0 -fno-builtin-memcmp -pie -fPIC -fstack-protector-strong --param=ssp-buffer-size=4"
+        args << "-DCMAKE_CXX_FLAGS=-ftrack-macro-expansion=0 -fno-builtin-memcmp -pie -fPIC -fstack-protector-strong --param=ssp-buffer-size=4"
+      end
+      args << "-DCMAKE_CXX_COMPILER=#{Formula['gcc'].opt_prefix}/bin/g++-4.9"
+      args << "-DCMAKE_C_COMPILER=#{Formula['gcc'].opt_prefix}/bin/gcc-4.9"
+      args << "-DCMAKE_ASM_COMPILER=#{Formula['gcc'].opt_prefix}/bin/gcc-4.9"
       args << "-DBoost_USE_STATIC_LIBS=ON"
       args << "-DBFD_LIB=#{Formula['binutils'].opt_prefix}/lib/libbfd.a"
       args << "-DCMAKE_INCLUDE_PATH=#{Formula['binutils'].opt_prefix}/include"
-      args << "-DLIBIBERTY_LIB=#{Formula['gcc49'].opt_prefix}/lib/x86_64/libiberty-4.9.a"
-    elsif build.with? 'gcc48'
-      args << "-DCMAKE_CXX_COMPILER=#{Formula['gcc49'].opt_prefix}/bin/g++-4.8"
-      args << "-DCMAKE_C_COMPILER=#{Formula['gcc49'].opt_prefix}/bin/gcc-4.8"
-      args << "-DCMAKE_ASM_COMPILER=#{Formula['gcc49'].opt_prefix}/bin/gcc-4.8"
-      args << "-DBoost_USE_STATIC_LIBS=ON"
-      args << "-DBFD_LIB=#{Formula['binutils'].opt_prefix}/lib/libbfd.a"
-      args << "-DCMAKE_INCLUDE_PATH=#{Formula['binutils'].opt_prefix}/include"
-      args << "-DLIBIBERTY_LIB=#{Formula['gcc48'].opt_prefix}/lib/x86_64/libiberty-4.8.a"
+      args << "-DLIBIBERTY_LIB=#{Formula['gcc'].opt_prefix}/lib/x86_64/libiberty-4.9.a"
     else
       args << "-DBFD_LIB=#{Formula['binutilsfb'].opt_prefix}/lib/libbfd.a"
       args << "-DCMAKE_INCLUDE_PATH=#{Formula['binutilsfb'].opt_prefix}/include"
@@ -228,10 +235,8 @@ class Hhvm < Formula
   end
 
   def caveats_gcc;
-    if build.with? 'gcc49'
+    if build.with? 'gcc'
       cc_ver = 'gcc-4.9'
-    elsif build.with? 'gcc48'
-      cc_ver = 'gcc-4.8'
     end
     <<-EOS.undent
 
@@ -251,7 +256,7 @@ class Hhvm < Formula
       The php.ini file can be found in:
         #{etc}/hhvm/php.ini
     EOS
-    s << caveats_gcc if build.with? 'gcc48' or build.with? 'gcc49'
+    s << caveats_gcc if build.with? 'gcc'
     s
   end
 end

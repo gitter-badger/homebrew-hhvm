@@ -5,7 +5,7 @@ Based on [Building and installing HHVM on OSX 10.8](https://github.com/facebook/
 
 Supported OSX
 ------------
-* 10.10 Yosemite [gcc49](https://github.com/Homebrew/homebrew-versions/pull/470)
+* 10.10 Yosemite
 * 10.9 Mavericks
 * 10.8 Mountain Lion
 
@@ -13,7 +13,6 @@ Requirements
 ------------
 
 * Homebrew
-* homebrew/dupes
 
 Installation
 ------------
@@ -22,7 +21,6 @@ Tap additional repositories:
 
 ```sh
 brew tap homebrew/dupes
-brew tap homebrew/versions
 ```
 
 And now tap this repository:
