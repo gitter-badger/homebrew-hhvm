@@ -1,10 +1,12 @@
 # Homebrew-HHVM
 
-A repository with all formulas related to install [HHVM](https://github.com/facebook/hhvm).
-Based on [Building and installing HHVM on OSX 10.8](https://github.com/facebook/hhvm/wiki/Building-and-installing-HHVM-on-OSX-10.8) by [Daniel Sloof](https://github.com/danslo)
+[![Join the chat at https://gitter.im/mcuadros/homebrew-hhvm](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mcuadros/homebrew-hhvm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Repository with all the formulas to install [HHVM](https://github.com/facebook/hhvm)
 
 Supported OSX
 ------------
+* 10.11 El Capitan
 * 10.10 Yosemite
 * 10.9 Mavericks
 * 10.8 Mountain Lion
@@ -12,66 +14,65 @@ Supported OSX
 Requirements
 ------------
 
-* Homebrew
+* [Homebrew](http://brew.sh)
 
 Installation
 ------------
 
-Tap additional repositories:
-
-```sh
-brew tap homebrew/dupes
-```
-
 And now tap this repository:
 
-```sh
-brew tap mcuadros/homebrew-hhvm
-```
+    brew tap mcuadros/homebrew-hhvm
 
 Usage
 -----
 
-Install the last stable version (3.3.0)
+**Note**: For a list of available configuration options run:
 
-```sh
-brew install hhvm
-```
+    brew options hhvm
+    brew info hhvm
+    brew uses hhvm
 
-or the current master
+##### Install the last stable release 3.9.0:
 
-```sh
-brew install hhvm --HEAD
-```
+    brew install hhvm
 
-HHVM requires MySQL to compile, by default will use `mysql` formula.
-
+HHVM requires MySQL to compile, by default will use mysql formula.  
 If mysql is already installed, you can use `--with-system-mysql`.
 
-But you can also use `--with-mariadb` or `--with-percona-server` to compile alternative versions of mysql.
+###### But you can also use to compile alternative versions of mysql:
+
+- MariaDB `--with-mariadb`
+- Percona Server `--with-percona-server`
+
+##### Install the devel branch:
+
+    brew install hhvm --devel
+
+
+##### Install the current master:
+
+    brew install hhvm --HEAD
 
 Known Problems
 -----
 
-HHVM no longer supports the built-in webserver as of 3.0.0.
+* HHVM no longer supports the built-in webserver as of 3.0.0.
+  - Please use [FastCGI](https://github.com/facebook/hhvm/wiki/FastCGI) own webserver (nginx or apache).
+  - [HHVM builtin Webserver on Go](https://github.com/beberlei/hhvm-serve)
 
-    Please use your own webserver (nginx or apache)
-    talking to HHVM over [fastcgi](https://github.com/facebook/hhvm/wiki/FastCGI).
-
-Extension, **mysqli broken**. This extension was broken in 3.0.0 and is fixed in 3.0.1.
-
-    Make sure to upgrade if you were having remove the Eval.CheckReturnTypeHints workaround if you were using it.
+* If you have XQuartz (X11) installed, you will have to temporarily remove a symbolic link to/usr/X11R6` in order to successfully install HHVM.
+  - You can use the following command: `sudo rm /usr/X11R6`
+  - After the install, you could return it with the command: `sudo ln -s /opt/X11 /usr/X11R6`
+  - For full reference, please see the issue #28.
 
 Uninstall tap
 ------------
 
 ```sh
-rm -rf /usr/local/Library/Taps/mcuadros-hhvm
+brew untap mcuadros/homebrew-hhvm
 brew cleanup -s --force
 brew prune
 ```
-
-For full reference, please see the issue [#28](https://github.com/mcuadros/homebrew-hhvm/issues/28).
 
 License
 -------
